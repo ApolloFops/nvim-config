@@ -25,6 +25,18 @@ return {
 			vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
 			vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist)
 
+			vim.lsp.config('pylsp', {
+				settings = {
+					pylsp = {
+						plugins = {
+							pycodestyle = {
+								ignore = { 'W191', 'E501' }
+							}
+						}
+					}
+				}
+			})
+
 			-- Use LspAttach autocommand to only map the following keys
 			-- after the language server attaches to the current buffer
 			vim.api.nvim_create_autocmd('LspAttach', {
