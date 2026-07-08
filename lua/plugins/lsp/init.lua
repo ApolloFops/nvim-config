@@ -41,17 +41,15 @@ return {
 			-- after the language server attaches to the current buffer
 			vim.api.nvim_create_autocmd('LspAttach', {
 				group = vim.api.nvim_create_augroup('UserLspConfig', {}),
-				callback = function(ev)
-					-- Enable completion triggered by <c-x><c-o>
-					vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
+				callback = function(args)
+					local client = assert(vim.lsp.get_client_by_id(args.data.client_id))
 
 					-- Buffer local mappings.
 					-- See `:help vim.lsp.*` for documentation on any of the below functions
-					local keymap_opts = { buffer = ev.buf }
+					local keymap_opts = { buffer = args.buf }
 					vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, keymap_opts)
 					vim.keymap.set('n', 'gd', vim.lsp.buf.definition, keymap_opts)
 					vim.keymap.set('n', 'K', vim.lsp.buf.hover, keymap_opts)
-					vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, keymap_opts)
 					vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, keymap_opts)
 					vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, keymap_opts)
 					vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, keymap_opts)
@@ -63,26 +61,45 @@ return {
 					vim.keymap.set({ 'n', 'v' }, '<space>ca', vim.lsp.buf.code_action, keymap_opts)
 					vim.keymap.set('n', 'gr', vim.lsp.buf.references, keymap_opts)
 
-					if vim.fn.has('nvim-0.10') == 1 then
-						-- inlay hints
-						if opts.inlay_hints.enabled then
-							vim.lsp.inlay_hint.enable()
-						end
+					if client:supports_method('textDocument/implementation') then
+						vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, keymap_opts)
+					end
 
-						-- code lens
-						-- if opts.codelens.enabled and vim.lsp.codelens then
-						-- 	lsp_util.on_supports_method("textDocument/codeLens",
-						-- 		function(client, buffer)
-						-- 			vim.lsp.codelens.refresh()
-						-- 			vim.api.nvim_create_autocmd(
-						-- 				{ "BufEnter", "CursorHold", "InsertLeave" },
-						-- 				{
-						-- 					buffer = buffer,
-						-- 					callback = vim.lsp.codelens
-						-- 					    .refresh,
-						-- 				})
-						-- 		end)
-						-- end
+					-- inlay hints
+					if opts.inlay_hints.enabled then
+						vim.lsp.inlay_hint.enable()
+					end
+
+					-- code lens
+					-- if opts.codelens.enabled and vim.lsp.codelens then
+					-- 	lsp_util.on_supports_method("textDocument/codeLens",
+					-- 		function(client, buffer)
+					-- 			vim.lsp.codelens.refresh()
+					-- 			vim.api.nvim_create_autocmd(
+					-- 				{ "BufEnter", "CursorHold", "InsertLeave" },
+					-- 				{
+					-- 					buffer = buffer,
+					-- 					callback = vim.lsp.codelens
+					-- 					    .refresh,
+					-- 				})
+					-- 		end)
+					-- end
+
+					-- completion
+					if client:supports_method('textDocument/completion') then
+						vim.opt.completeopt = { "menuone", "noselect", "popup" }
+
+						-- Trigger on all characters
+						local chars = {}
+						for i = 32, 126 do
+							table.insert(chars, string.char(i))
+						end
+						client.server_capabilities.completionProvider.triggerCharacters = chars
+
+						vim.lsp.completion.enable(true, client.id, args.buf,
+							{ autotrigger = true })
+						vim.keymap.set("i", "<C-space>", vim.lsp.completion.get,
+							{ desc = "trigger autocompletion" })
 					end
 				end,
 			})
