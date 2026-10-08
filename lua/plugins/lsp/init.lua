@@ -140,7 +140,6 @@ return {
 				'luacheck',
 				'jdtls',
 				'rust-analyzer',
-				'rustfmt',
 				'json-lsp',
 				'arduino-language-server',
 				'groovy-language-server',
