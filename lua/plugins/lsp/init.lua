@@ -144,6 +144,7 @@ return {
 				'arduino-language-server',
 				'groovy-language-server',
 				'lemminx',
+				'typescript-language-server',
 			},
 		},
 	},
