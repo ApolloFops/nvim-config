@@ -178,6 +178,7 @@ return {
 				'lemminx',
 				'vtsls',
 				'vue-language-server',
+				'gopls',
 			},
 		},
 	},
